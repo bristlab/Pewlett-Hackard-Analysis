@@ -36,16 +36,6 @@ CREATE TABLE salaries (
 	PRIMARY KEY (emp_no)
 );
 
-CREATE TABLE managers (
-	dept_no VARCHAR(4),
-	emp_no INT,
-	from_date DATE NOT NULL,
-	to_date DATE NOT NULL,
-	PRIMARY KEY (dept_no, emp_no),
-	FOREIGN KEY (dept_no) REFERENCES departments (dept_no),
-	FOREIGN KEY (emp_no) REFERENCES employees (emp_no)
-
-);
 
 CREATE TABLE dept_emp (
 	dept_no VARCHAR(4),
@@ -60,10 +50,13 @@ CREATE TABLE dept_emp (
 
 CREATE TABLE titles (
 	emp_no INT,
-	title VARCHAR(12),
+	title VARCHAR(20),
 	from_date DATE NOT NULL,
 	to_date DATE NOT NULL,
-	PRIMARY KEY (title, emp_no),
 	FOREIGN KEY (emp_no) REFERENCES employees (emp_no)
 
 )
+
+
+-- DROP TABLE employees CASCADE;
+
