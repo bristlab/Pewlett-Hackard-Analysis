@@ -60,9 +60,9 @@ Once we're satisfied with our framework and imported data, we start writing SQL 
 
 It turns out that this query also returns employees who have already left the company, so we need to join this table with another table which contains departure dates. We also provide queries that determine how many employees will be retiring on a *per department basis*, as well as the number of employees who would be eligible to fill those job openings based on seniority.
 
-### Retiree roles per department
+### Retirement titles
 
-The query below creates a new table by merging select data from two existing tables. The new table contains the employee number, first name, last name, title, and employment dates. The two tables are joined together using the employee number they have in common, and only employees born between 1952 and 1955 are included in the new table.
+* The query below creates a new table called `retirement_titles` by merging select data from two existing tables. The new table contains the employee number, first name, last name, title, and employment dates. The two tables are joined together using the employee number they have in common, and only employees born between 1952 and 1955 are included in the new table.
 
 	-- Retrieve the emp_no, first_name, and last_name columns from the Employees table.
 	SELECT e.emp_no, e.first_name, e.last_name, t.title, t.from_date, t.to_date
@@ -73,10 +73,22 @@ The query below creates a new table by merging select data from two existing tab
 	WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
 	ORDER BY emp_no
 
+| emp_no | first_name | last_name | title | from_date | to_date
+|---|---|---|---|---|---
+10001 | Georgi | Facello | Senior Engineer | 1986-06-26 | 9999-01-01
+10004 | Chirstian | Koblick | Engineer | 1986-12-01 | 1995-12-01
+10004 | Chirstian | Koblick | Senior Engineer | 1995-12-01 | 9999-01-01
+10005 | Kyoichi | Maliniak | Senior Staff | 1996-09-12 | 9999-01-01
+10005 | Kyoichi | Maliniak | Staff | 1989-09-12 | 1996-09-12
+10006 | Anneke | Preusig | Senior Engineer | 1990-08-05 | 9999-01-01
+10009 | Sumant | Peac | Assistant Engineer | 1985-02-18 | 1990-02-18
+10009 | Sumant | Peac | Engineer | 1990-02-18 | 1995-02-18
+10009 | Sumant | Peac | Senior Engineer | 1995-02-18 | 9999-01-01
+10011 | Mary | Sluis | Staff | 1990-01-22 | 1996-11-09
 
-## Summary
+### Unique titles
 
-We've determined the number of employees retiring based on their job titles, and at this point it's trivial to create additional queries that return the number of employees retiring per department. See the `Employee_Database_challenge.sql` for more examples.
+* While the `retirement_titles` table is a good start, it fails to exclude former employees who are no longer with the company. Also, it contains duplicate entries because some employees have received promotions to different job titles over the years. So we'll create a new table, `unique_titles`, which contains the current title for all current employees.
 
 	-- Use Distinct with Orderby to remove duplicate rows
 	SELECT DISTINCT ON (emp_no) emp_no,
@@ -89,6 +101,31 @@ We've determined the number of employees retiring based on their job titles, and
 	ORDER BY emp_no, to_date DESC;
 	SELECT * FROM unique_titles;
 
+| emp_no | first_name | last_name | title
+|---|---|---|---
+10001 | Georgi | Facello | Senior Engineer
+10004 | Chirstian | Koblick | Senior Engineer
+10005 | Kyoichi | Maliniak | Senior Staff
+10006 | Anneke | Preusig | Senior Engineer
+10009 | Sumant | Peac | Senior Engineer
+10018 | Kazuhide | Peha | Senior Engineer
+10019 | Lillian | Haddadi | Staff
+10020 | Mayuko | Warwick | Engineer
+10022 | Shahaf | Famili | Engineer
+10023 | Bojan | Montemayor | Engineer
+
+### Retiring titles
+
+* We've determined the number of employees retiring based on their job titles so that human resources can get an idea of how large their mentorship program will need to be in order to fill all the positions.
+
+	-- Retrieve the number of employees by their most recent job title who are about to retire.
+	SELECT COUNT(title), title
+	INTO retiring_titles
+	FROM unique_titles
+	GROUP BY title
+	ORDER BY count DESC;
+	SELECT * FROM retiring_titles;
+
 | count | title
 | ---|---
 | 25916 | Senior Engineer
@@ -99,7 +136,31 @@ We've determined the number of employees retiring based on their job titles, and
 | 1090 | Assistant Engineer
 | 2 | Manager
 
-Finally, we have also exported a CSV summarizing all current employees who could be eligible for promotions as their predecessors enter retirement. Here's an excerpt from `mentorship_eligibility.csv`.
+
+### Mentorship eligibility
+
+* Finally, we have also exported a CSV summarizing all current employees who could be eligible for promotions as their predecessors enter retirement. Here's the SQL inquiry and an excerpt from `mentorship_eligibility.csv`.
+
+
+	-- Create a Mentorship Eligibility table that holds the employees who are eligible
+	-- to participate in a mentorship program.
+	SELECT DISTINCT ON (e.emp_no) e.emp_no,
+	e.first_name,
+	e.last_name,
+	e.birth_date,
+	de.from_date,
+	de.to_date,
+	t.title
+	INTO mentorship_eligibility
+	FROM employees AS e
+	INNER JOIN dept_emp as de
+	ON (e.emp_no = de.emp_no)
+	INNER JOIN titles as t
+	ON (e.emp_no = t.emp_no)
+	WHERE (e.birth_date BETWEEN '1965-01-01' AND '1965-12-31')
+	AND (de.to_date = '9999-01-01')
+	ORDER BY emp_no;
+
 
 | emp_no | first_name | last_name | birth_date | from_date | to_date | title
 |---|---|---|---|---|---|---
@@ -113,3 +174,31 @@ Finally, we have also exported a CSV summarizing all current employees who could
 | 12155 | Keiichiro | Glinert | 1965-01-21 | 1993-09-16 | 9999-01-01 | Engineer
 | 12408 | Rasiah | Sudkamp | 1965-01-10 | 1995-04-18 | 9999-01-01 | Senior Engineer
 | 12643 | Morrie | Schurmann | 1965-01-30 | 1998-12-31 | 9999-01-01 | Staff
+
+
+## Summary
+
+* How many roles will need to be filled as the "silver tsunami" begins to make an impact?
+
+We'll incorporate a `COUNT()` method into our query to count all employee numbers listed in the `unique_titles` table.
+
+`SELECT COUNT(emp_no) FROM unique_titles`
+`>>> 72458`
+
+Our query returns 72458 unique employees who are approaching retirement and whose positions will need to be filled. We can confirm this count by summing the `count` column of the `retiring_titles` table as follows:
+
+`SELECT SUM(count) FROM retiring_titles`
+`>>> 72458`
+
+* Are there enough qualified, retirement-ready employees in the departments to mentor the next generation of Pewlett Hackard employees?
+
+By counting the number of employee numbers in `mentorship_eligibility`, we get the following:
+
+`SELECT COUNT(emp_no) FROM mentorship_eligibility`
+
+`>>> 1549`
+
+It does not appear that there are enough eligible candidates to fill the vacant positions so far. 
+
+
+

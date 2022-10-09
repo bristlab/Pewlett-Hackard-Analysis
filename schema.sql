@@ -38,7 +38,7 @@ CREATE TABLE salaries (
 
 
 CREATE TABLE dept_emp (
-	dept_no VARCHAR(4),
+	dept_no VARCHAR(6),
 	emp_no INT,
 	from_date DATE NOT NULL,
 	to_date DATE NOT NULL,
@@ -59,4 +59,9 @@ CREATE TABLE titles (
 
 
 -- DROP TABLE employees CASCADE;
+
+
+DROP TABLE retirement_info;
+
+
 
