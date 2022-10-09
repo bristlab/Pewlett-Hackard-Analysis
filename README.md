@@ -49,29 +49,29 @@ Now that we have our framework, we can start importing our CSV data into pgAdmin
 
 Once we're satisfied with our framework and imported data, we start writing SQL queries to filter, sort and view section of our database. One of our first queries involves creating a new table from the existing data which contains all employees who are approaching retirement age. Here's an example from `queries.sql`.
 
-	-- Create new table for retiring employees
-	SELECT emp_no, first_name, last_name
-	INTO retirement_info
-	FROM employees
-	WHERE (birth_date BETWEEN '1952-01-01' AND '1955-12-31')
-	AND (hire_date BETWEEN '1985-01-01' AND '1988-12-31');
-	-- Check the table
-	SELECT * FROM retirement_info;
+`-- Create new table for retiring employees
+SELECT emp_no, first_name, last_name
+INTO retirement_info
+FROM employees
+WHERE (birth_date BETWEEN '1952-01-01' AND '1955-12-31')
+AND (hire_date BETWEEN '1985-01-01' AND '1988-12-31');
+-- Check the table
+SELECT * FROM retirement_info;`
 
 It turns out that this query also returns employees who have already left the company, so we need to join this table with another table which contains departure dates. We also provide queries that determine how many employees will be retiring on a *per department basis*, as well as the number of employees who would be eligible to fill those job openings based on seniority.
 
-### Retirement titles
+### Deliverables
 
-* The query below creates a new table called `retirement_titles` by merging select data from two existing tables. The new table contains the employee number, first name, last name, title, and employment dates. The two tables are joined together using the employee number they have in common, and only employees born between 1952 and 1955 are included in the new table.
+* **Retirement titles:** The query below creates a new table called `retirement_titles` by merging select data from two existing tables. The new table contains the employee number, first name, last name, title, and employment dates. The two tables are joined together using the employee number they have in common, and only employees born between 1952 and 1955 are included in the new table.
 
-	-- Retrieve the emp_no, first_name, and last_name columns from the Employees table.
-	SELECT e.emp_no, e.first_name, e.last_name, t.title, t.from_date, t.to_date
-	INTO retirement_titles
-	FROM employees as e
-	INNER JOIN titles as t
-	ON (e.emp_no = t.emp_no)
-	WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
-	ORDER BY emp_no
+`-- Retrieve the emp_no, first_name, and last_name columns from the Employees table.
+SELECT e.emp_no, e.first_name, e.last_name, t.title, t.from_date, t.to_date
+INTO retirement_titles
+FROM employees as e
+INNER JOIN titles as t
+ON (e.emp_no = t.emp_no)
+WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
+ORDER BY emp_no`
 
 | emp_no | first_name | last_name | title | from_date | to_date
 |---|---|---|---|---|---
@@ -86,9 +86,7 @@ It turns out that this query also returns employees who have already left the co
 10009 | Sumant | Peac | Senior Engineer | 1995-02-18 | 9999-01-01
 10011 | Mary | Sluis | Staff | 1990-01-22 | 1996-11-09
 
-### Unique titles
-
-* While the `retirement_titles` table is a good start, it fails to exclude former employees who are no longer with the company. Also, it contains duplicate entries because some employees have received promotions to different job titles over the years. So we'll create a new table, `unique_titles`, which contains the current title for all current employees.
+* **Unique titles:** While the `retirement_titles` table is a good start, it fails to exclude former employees who are no longer with the company. Also, it contains duplicate entries because some employees have received promotions to different job titles over the years. So we'll create a new table, `unique_titles`, which contains the current title for all current employees.
 
 	-- Use Distinct with Orderby to remove duplicate rows
 	SELECT DISTINCT ON (emp_no) emp_no,
@@ -114,17 +112,15 @@ It turns out that this query also returns employees who have already left the co
 10022 | Shahaf | Famili | Engineer
 10023 | Bojan | Montemayor | Engineer
 
-### Retiring titles
+* **Retiring titles:** We've determined the number of employees retiring based on their job titles so that human resources can get an idea of how large their mentorship program will need to be in order to fill all the positions.
 
-* We've determined the number of employees retiring based on their job titles so that human resources can get an idea of how large their mentorship program will need to be in order to fill all the positions.
-
-	-- Retrieve the number of employees by their most recent job title who are about to retire.
-	SELECT COUNT(title), title
-	INTO retiring_titles
-	FROM unique_titles
-	GROUP BY title
-	ORDER BY count DESC;
-	SELECT * FROM retiring_titles;
+`-- Retrieve the number of employees by their most recent job title who are about to retire.
+SELECT COUNT(title), title
+INTO retiring_titles
+FROM unique_titles
+GROUP BY title
+ORDER BY count DESC;
+SELECT * FROM retiring_titles;`
 
 | count | title
 | ---|---
@@ -136,30 +132,27 @@ It turns out that this query also returns employees who have already left the co
 | 1090 | Assistant Engineer
 | 2 | Manager
 
-
-### Mentorship eligibility
-
-* Finally, we have also exported a CSV summarizing all current employees who could be eligible for promotions as their predecessors enter retirement. Here's the SQL inquiry and an excerpt from `mentorship_eligibility.csv`.
+* **Mentorship eligibility:** Finally, we have also exported a CSV summarizing all current employees who could be eligible for promotions as their predecessors enter retirement. Here's the SQL inquiry and an excerpt from `mentorship_eligibility.csv`.
 
 
-	-- Create a Mentorship Eligibility table that holds the employees who are eligible
-	-- to participate in a mentorship program.
-	SELECT DISTINCT ON (e.emp_no) e.emp_no,
-	e.first_name,
-	e.last_name,
-	e.birth_date,
-	de.from_date,
-	de.to_date,
-	t.title
-	INTO mentorship_eligibility
-	FROM employees AS e
-	INNER JOIN dept_emp as de
-	ON (e.emp_no = de.emp_no)
-	INNER JOIN titles as t
-	ON (e.emp_no = t.emp_no)
-	WHERE (e.birth_date BETWEEN '1965-01-01' AND '1965-12-31')
-	AND (de.to_date = '9999-01-01')
-	ORDER BY emp_no;
+`-- Create a Mentorship Eligibility table that holds the employees who are eligible
+-- to participate in a mentorship program.
+SELECT DISTINCT ON (e.emp_no) e.emp_no,
+e.first_name,
+e.last_name,
+e.birth_date,
+de.from_date,
+de.to_date,
+t.title
+INTO mentorship_eligibility
+FROM employees AS e
+INNER JOIN dept_emp as de
+ON (e.emp_no = de.emp_no)
+INNER JOIN titles as t
+ON (e.emp_no = t.emp_no)
+WHERE (e.birth_date BETWEEN '1965-01-01' AND '1965-12-31')
+AND (de.to_date = '9999-01-01')
+ORDER BY emp_no;`
 
 
 | emp_no | first_name | last_name | birth_date | from_date | to_date | title
@@ -178,9 +171,7 @@ It turns out that this query also returns employees who have already left the co
 
 ## Summary
 
-* How many roles will need to be filled as the "silver tsunami" begins to make an impact?
-
-We'll incorporate a `COUNT()` method into our query to count all employee numbers listed in the `unique_titles` table.
+To determine how many roles will need to be filled as the "silver tsunami" begins to make an impact, we'll incorporate a `COUNT()` method into our query to count all employee numbers listed in the `unique_titles` table.
 
 `SELECT COUNT(emp_no) FROM unique_titles`
 `>>> 72458`
@@ -192,13 +183,46 @@ Our query returns 72458 unique employees who are approaching retirement and whos
 
 * Are there enough qualified, retirement-ready employees in the departments to mentor the next generation of Pewlett Hackard employees?
 
-By counting the number of employee numbers in `mentorship_eligibility`, we get the following:
+We need to make sure there are enough qualified, retirement-ready employees who are able to provide mentorships to other employees before they retire. The following query returns a new table, `retirees_per_dept`, which shows the number of employees who are retiring from each department.
+
+`SELECT COUNT(ut.emp_no), d.dept_name
+INTO retirees_per_dept
+FROM unique_titles AS ut
+INNER JOIN dept_emp AS de
+ON (ut.emp_no = de.emp_no)
+INNER JOIN departments as d
+ON (de.dept_no = d.dept_no)
+GROUP BY dept_name
+ORDER BY count DESC`
+
+|count|dept_name
+|---|---
+| 20451 | Development
+| 17784 | Production
+| 12649 | Sales
+| 5778 | Customer Service
+| 5216 | Research
+| 4865 | Quality Management
+| 4816 | Marketing
+| 4351 | Human Resources
+| 4199 | Finance
+
+
+* We would like to know whether or not the company has enough young employees who are eligible for mentorships from the retiring employees. By counting the number of employee numbers in `mentorship_eligibility`, we get the following:
 
 `SELECT COUNT(emp_no) FROM mentorship_eligibility`
 
 `>>> 1549`
 
-It does not appear that there are enough eligible candidates to fill the vacant positions so far. 
+It does not appear that there are nearly enough eligible candidates to fill the vacant positions so far. We decided it would be necessary to include younger candidates in the mentorship eligibility pool by expanding the range of the `birth_date` filter to 1970, but this revealed what could be a much larger problem facing the company, which is that the data shows there have never been any employees with a birth date prior to February 1, 1965. Our next step would be to verify whether or not the data we have been provided is complete.
+
+`SELECT e.emp_no,
+e.first_name,
+e.last_name,
+e.birth_date
+FROM employees AS e
+WHERE (e.birth_date BETWEEN '1965-01-01' AND '1970-12-31')
+ORDER BY birth_date DESC`
 
 
 

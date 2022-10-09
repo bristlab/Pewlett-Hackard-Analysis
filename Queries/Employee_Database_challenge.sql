@@ -1,6 +1,6 @@
 -- Retrieve the emp_no, first_name, and last_name columns from the Employees table.
 SELECT e.emp_no, e.first_name, e.last_name, t.title, t.from_date, t.to_date
---INTO retirement_titles
+INTO retirement_titles
 FROM employees as e
 INNER JOIN titles as t
 ON (e.emp_no = t.emp_no)
@@ -58,20 +58,26 @@ SELECT COUNT(emp_no) FROM mentorship_eligibility
 SELECT * FROM mentorship_eligibility
 
 
----
-SELECT DISTINCT ON (e.emp_no) e.emp_no,
+-- Retrieve the number of employees retiring per department.
+
+SELECT COUNT(ut.emp_no), d.dept_name
+INTO retirees_per_dept
+FROM unique_titles as ut
+INNER JOIN dept_emp as de
+ON (ut.emp_no = de.emp_no)
+INNER JOIN departments as d
+ON (de.dept_no = d.dept_no)
+GROUP BY dept_name
+ORDER BY count DESC
+SELECT * FROM retirees_per_dept
+
+
+-- Find the youngest employee
+select e.emp_no,
 e.first_name,
 e.last_name,
-e.birth_date,
-de.from_date,
-de.to_date
---INTO mentorship_eligibility
-FROM employees AS e
-INNER JOIN dept_emp as de
-ON (e.emp_no = de.emp_no)
-WHERE (e.birth_date BETWEEN '1965-01-01' AND '1970-12-31')
-AND (de.to_date = '9999-01-01')
-ORDER BY emp_no;
-
+e.birth_date
+from employees as e
+ORDER BY birth_date DESC
 
 

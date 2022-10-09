@@ -41,7 +41,7 @@ ON d.dept_no = dm.dept_no;
 -- Joining retirement_info and dept_emp tables
 SELECT retirement_info.emp_no,
     retirement_info.first_name,
-	retirement_info.last_name,
+    retirement_info.last_name,
     dept_emp.to_date
 FROM retirement_info
 LEFT JOIN dept_emp
@@ -104,10 +104,10 @@ SELECT  dm.dept_no,
         dm.to_date
 INTO manager_info
 FROM dept_manager AS dm
-	INNER JOIN departments AS d
-		ON (dm.dept_no = d.dept_no)
-	INNER JOIN current_emp AS ce
-		ON (dm.emp_no = ce.emp_no);
+    INNER JOIN departments AS d
+        ON (dm.dept_no = d.dept_no)
+    INNER JOIN current_emp AS ce
+        ON (dm.emp_no = ce.emp_no);
 
 SELECT ce.emp_no,
 ce.first_name,
@@ -135,3 +135,5 @@ ON (de.dept_no = d.dept_no);
 
 select * from dept_info
 where dept_name = 'Sales' or dept_name = 'Development'
+
+select * from unique_titles
