@@ -210,11 +210,11 @@ We need to make sure there are enough qualified, retirement-ready employees who 
 
 * We would like to know whether or not the company has enough young employees who are eligible for mentorships from the retiring employees. By counting the number of employee numbers in `mentorship_eligibility`, we get the following:
 
-`SELECT COUNT(emp_no) FROM mentorship_eligibility`
+	`SELECT COUNT(emp_no) FROM mentorship_eligibility`
 
-`>>> 1549`
+	`>>> 1549`
 
-It does not appear that there are nearly enough eligible candidates to fill the vacant positions so far. We decided it would be necessary to include younger candidates in the mentorship eligibility pool by expanding the range of the `birth_date` filter to 1970, but this revealed what could be a much larger problem facing the company, which is that the data shows there have never been any employees with a birth date prior to February 1, 1965. Our next step would be to verify whether or not the data we have been provided is complete.
+	It does not appear that there are nearly enough eligible candidates to fill the vacant positions so far. We decided it would be necessary to include younger candidates in the mentorship eligibility pool by expanding the range of the `birth_date` filter to 1970, but this revealed what could be a much larger problem facing the company, which is that the data shows there have never been any employees with a birth date prior to February 1, 1965. Our next step would be to verify whether or not the data we have been provided is complete.
 
 		SELECT e.emp_no,
 		e.first_name,
