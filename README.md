@@ -64,14 +64,14 @@ It turns out that this query also returns employees who have already left the co
 
 * **Retirement titles:** The query below creates a new table called `retirement_titles` by merging select data from two existing tables. The new table contains the employee number, first name, last name, title, and employment dates. The two tables are joined together using the employee number they have in common, and only employees born between 1952 and 1955 are included in the new table.
 
-`-- Retrieve the emp_no, first_name, and last_name columns from the Employees table.
-SELECT e.emp_no, e.first_name, e.last_name, t.title, t.from_date, t.to_date
-INTO retirement_titles
-FROM employees as e
-INNER JOIN titles as t
-ON (e.emp_no = t.emp_no)
-WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
-ORDER BY emp_no`
+		-- Retrieve the emp_no, first_name, and last_name columns from the Employees table.
+		SELECT e.emp_no, e.first_name, e.last_name, t.title, t.from_date, t.to_date
+		INTO retirement_titles
+		FROM employees as e
+		INNER JOIN titles as t
+		ON (e.emp_no = t.emp_no)
+		WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
+		ORDER BY emp_no
 
 | emp_no | first_name | last_name | title | from_date | to_date
 |---|---|---|---|---|---
@@ -88,16 +88,16 @@ ORDER BY emp_no`
 
 * **Unique titles:** While the `retirement_titles` table is a good start, it fails to exclude former employees who are no longer with the company. Also, it contains duplicate entries because some employees have received promotions to different job titles over the years. So we'll create a new table, `unique_titles`, which contains the current title for all current employees.
 
-	-- Use Distinct with Orderby to remove duplicate rows
-	SELECT DISTINCT ON (emp_no) emp_no,
-	first_name,
-	last_name,
-	title
-	INTO unique_titles
-	FROM retirement_titles
-	WHERE (to_date = '9999-01-01')
-	ORDER BY emp_no, to_date DESC;
-	SELECT * FROM unique_titles;
+		-- Use Distinct with Orderby to remove duplicate rows
+		SELECT DISTINCT ON (emp_no) emp_no,
+		first_name,
+		last_name,
+		title
+		INTO unique_titles
+		FROM retirement_titles
+		WHERE (to_date = '9999-01-01')
+		ORDER BY emp_no, to_date DESC;
+		SELECT * FROM unique_titles;
 
 | emp_no | first_name | last_name | title
 |---|---|---|---
@@ -114,13 +114,13 @@ ORDER BY emp_no`
 
 * **Retiring titles:** We've determined the number of employees retiring based on their job titles so that human resources can get an idea of how large their mentorship program will need to be in order to fill all the positions.
 
-`-- Retrieve the number of employees by their most recent job title who are about to retire.
-SELECT COUNT(title), title
-INTO retiring_titles
-FROM unique_titles
-GROUP BY title
-ORDER BY count DESC;
-SELECT * FROM retiring_titles;`
+		-- Retrieve the number of employees by their most recent job title who are about to retire.
+		SELECT COUNT(title), title
+		INTO retiring_titles
+		FROM unique_titles
+		GROUP BY title
+		ORDER BY count DESC;
+		SELECT * FROM retiring_titles;
 
 | count | title
 | ---|---
@@ -135,24 +135,24 @@ SELECT * FROM retiring_titles;`
 * **Mentorship eligibility:** Finally, we have also exported a CSV summarizing all current employees who could be eligible for promotions as their predecessors enter retirement. Here's the SQL inquiry and an excerpt from `mentorship_eligibility.csv`.
 
 
-`-- Create a Mentorship Eligibility table that holds the employees who are eligible
--- to participate in a mentorship program.
-SELECT DISTINCT ON (e.emp_no) e.emp_no,
-e.first_name,
-e.last_name,
-e.birth_date,
-de.from_date,
-de.to_date,
-t.title
-INTO mentorship_eligibility
-FROM employees AS e
-INNER JOIN dept_emp as de
-ON (e.emp_no = de.emp_no)
-INNER JOIN titles as t
-ON (e.emp_no = t.emp_no)
-WHERE (e.birth_date BETWEEN '1965-01-01' AND '1965-12-31')
-AND (de.to_date = '9999-01-01')
-ORDER BY emp_no;`
+		-- Create a Mentorship Eligibility table that holds the employees who are eligible
+		-- to participate in a mentorship program.
+		SELECT DISTINCT ON (e.emp_no) e.emp_no,
+		e.first_name,
+		e.last_name,
+		e.birth_date,
+		de.from_date,
+		de.to_date,
+		t.title
+		INTO mentorship_eligibility
+		FROM employees AS e
+		INNER JOIN dept_emp as de
+		ON (e.emp_no = de.emp_no)
+		INNER JOIN titles as t
+		ON (e.emp_no = t.emp_no)
+		WHERE (e.birth_date BETWEEN '1965-01-01' AND '1965-12-31')
+		AND (de.to_date = '9999-01-01')
+		ORDER BY emp_no;
 
 
 | emp_no | first_name | last_name | birth_date | from_date | to_date | title
@@ -185,15 +185,15 @@ Our query returns 72458 unique employees who are approaching retirement and whos
 
 We need to make sure there are enough qualified, retirement-ready employees who are able to provide mentorships to other employees before they retire. The following query returns a new table, `retirees_per_dept`, which shows the number of employees who are retiring from each department.
 
-`SELECT COUNT(ut.emp_no), d.dept_name
-INTO retirees_per_dept
-FROM unique_titles AS ut
-INNER JOIN dept_emp AS de
-ON (ut.emp_no = de.emp_no)
-INNER JOIN departments as d
-ON (de.dept_no = d.dept_no)
-GROUP BY dept_name
-ORDER BY count DESC`
+		SELECT COUNT(ut.emp_no), d.dept_name
+		INTO retirees_per_dept
+		FROM unique_titles AS ut
+		INNER JOIN dept_emp AS de
+		ON (ut.emp_no = de.emp_no)
+		INNER JOIN departments as d
+		ON (de.dept_no = d.dept_no)
+		GROUP BY dept_name
+		ORDER BY count DESC
 
 |count|dept_name
 |---|---
@@ -216,13 +216,13 @@ ORDER BY count DESC`
 
 It does not appear that there are nearly enough eligible candidates to fill the vacant positions so far. We decided it would be necessary to include younger candidates in the mentorship eligibility pool by expanding the range of the `birth_date` filter to 1970, but this revealed what could be a much larger problem facing the company, which is that the data shows there have never been any employees with a birth date prior to February 1, 1965. Our next step would be to verify whether or not the data we have been provided is complete.
 
-`SELECT e.emp_no,
-e.first_name,
-e.last_name,
-e.birth_date
-FROM employees AS e
-WHERE (e.birth_date BETWEEN '1965-01-01' AND '1970-12-31')
-ORDER BY birth_date DESC`
+		SELECT e.emp_no,
+		e.first_name,
+		e.last_name,
+		e.birth_date
+		FROM employees AS e
+		WHERE (e.birth_date BETWEEN '1965-01-01' AND '1970-12-31')
+		ORDER BY birth_date DESC
 
 
 
